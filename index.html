@@ -1,62 +1,232 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Countdown to May 22, 2025</title>
+    <title>Countdown Timer</title>
     <style>
         body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: black;
+            color: white;
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 50px;
-            background-color: #f4f4f4;
+            flex-direction: column;
         }
-        h1 {
-            color: #333;
+
+        #countdown-container {
+            text-align: center;
+            width: 100%;
+            /* Ensure the container takes full width */
+            max-width: 800px;
+            /* Limit the maximum width for better readability */
         }
+
+        #title {
+            font-size: 4rem;
+            /* Larger title */
+            margin-bottom: 30px;
+        }
+
         #countdown {
-            font-size: 2em;
+            font-size: 2.5rem;
             font-weight: bold;
             color: red;
-            margin-top: 20px;
+            /* Default countdown text color */
         }
-        .container {
-            background: white;
-            padding: 20px;
+
+        #countdown.green {
+            color: green;
+            /* Green color for the last 10 days */
+        }
+
+        #countdown div {
+            margin: 10px 0;
+            /* Space between lines */
+        }
+
+        #progress-bar-container {
+            width: 40%;
+            /* Set width to 40% */
+            height: 20px;
+            /* Keep height the same */
+            background-color: #444;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            display: inline-block;
+            /* Keep border radius the same */
+            margin-top: 30px;
+            overflow: hidden;
+            position: relative;
+            margin-left: auto;
+            /* Center the bar horizontally */
+            margin-right: auto;
+            /* Center the bar horizontally */
+        }
+
+        #progress-bar {
+            height: 100%;
+            width: 0;
+            background-color: red;
+            transition: width 1s ease, background-color 1s ease;
+        }
+
+        #graduation-hat {
+            position: absolute;
+            left: 0;
+            /* Start at the beginning of the bar */
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 30px;
+            /* Keep hat size the same */
+            transition: left 1s ease;
+            /* Smoothly move with the bar */
+        }
+
+        #encouragement {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            color: #ffcc00;
+            /* Yellow color for encouragement text */
+            font-style: italic;
+            white-space: nowrap;
+            /* Prevent text from wrapping */
+            overflow: hidden;
+            /* Hide overflow */
+            text-overflow: ellipsis;
+            /* Add ellipsis for long text */
+            max-width: 100%;
+            /* Ensure text doesn't overflow the container */
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <h1>Countdown to May 22, 2025</h1>
-        <p id="countdown"></p>
+    <div id="countdown-container">
+        <div id="title">متى أتخرج؟</div>
+        <div id="countdown">
+            <div id="days"></div>
+            <div id="hours"></div>
+            <div id="minutes"></div>
+            <div id="seconds"></div>
+        </div>
+        <div id="progress-bar-container">
+            <div id="progress-bar"></div>
+            <div id="graduation-hat">🎓</div> <!-- Graduation hat emoji -->
+        </div>
+        <div id="encouragement"></div> <!-- Encouraging words will appear here -->
     </div>
 
     <script>
+        const encouragementMessages = [
+            "أنت تقترب من خط النهاية! استمر في العمل الجاد! 💪",
+            "كل يوم تقترب أكثر من تحقيق حلمك! 🌟",
+            "لا تتوقف الآن، النجاح ينتظرك! 🚀",
+            "أنت تبلي بلاءً حسنًا! استمر في التقدم!💪 ",
+            "التخرج على بعد خطوات! أنت قادر على تحقيق ذلك! 🎉",
+            "كل جهد تبذله الآن سيؤتي ثماره قريبًا! 🌱",
+            "أنت تبني مستقبلك خطوة بخطوة! استمر! 🏗️",
+            "التحديات هي ما تجعل النجاح حلوًا! 🍬",
+            "أنت أقوى مما تعتقد! استمر في التقدم! 💥",
+            "النجاح ليس بعيدًا، استمر في المحاولة! 🌠"
+        ];
+
+        function getRandomEncouragement() {
+            const randomIndex = Math.floor(Math.random() * encouragementMessages.length);
+            return encouragementMessages[randomIndex];
+        }
+
+        function getDailyEncouragement() {
+            const today = new Date().toDateString(); // Get today's date as a string
+            const lastEncouragementDate = localStorage.getItem("lastEncouragementDate");
+            let encouragementMessage = localStorage.getItem("encouragementMessage");
+
+            // If the date has changed or no message is stored, update the message
+            if (lastEncouragementDate !== today || !encouragementMessage) {
+                encouragementMessage = getRandomEncouragement();
+                localStorage.setItem("lastEncouragementDate", today);
+                localStorage.setItem("encouragementMessage", encouragementMessage);
+            }
+
+            return encouragementMessage;
+        }
+
+        // Set the start date to the first time the page loads
+        const startDate = new Date().getTime(); // Fixed start date
+
         function updateCountdown() {
-            const targetDate = new Date("May 22, 2025 00:00:00").getTime();
-            const now = new Date().getTime();
+            const daysElement = document.getElementById("days");
+            const hoursElement = document.getElementById("hours");
+            const minutesElement = document.getElementById("minutes");
+            const secondsElement = document.getElementById("seconds");
+            const progressBar = document.getElementById("progress-bar");
+            const graduationHat = document.getElementById("graduation-hat");
+            const encouragementElement = document.getElementById("encouragement");
+            const countdownElement = document.getElementById("countdown");
+
+            if (!daysElement || !hoursElement || !minutesElement || !secondsElement || !progressBar || !graduationHat || !encouragementElement || !countdownElement) {
+                console.error("Error: Countdown elements not found!");
+                return;
+            }
+
+            const targetDate = new Date("2025-05-22T00:00:00").getTime(); // Target date
+            const now = new Date().getTime(); // Current date
             const difference = targetDate - now;
 
             if (difference <= 0) {
-                document.getElementById("countdown").innerHTML = "The day has arrived!";
+                daysElement.innerHTML = "لقد تخرجت!";
+                hoursElement.innerHTML = "";
+                minutesElement.innerHTML = "";
+                secondsElement.innerHTML = "";
+                progressBar.style.width = "100%";
+                progressBar.style.backgroundColor = "green";
+                graduationHat.style.left = "100%"; // Move hat to the end
+                encouragementElement.innerHTML = "مبروك! لقد تخرجت! 🎓🎉";
+                countdownElement.classList.add("green"); // Ensure text is green
                 return;
             }
+
+            const totalTime = targetDate - startDate; // Total time from start date to target date
+            const elapsedTime = now - startDate; // Elapsed time from start date
+            const progress = (elapsedTime / totalTime) * 100;
+
+            // Update progress bar
+            progressBar.style.width = `${progress}%`;
+            progressBar.style.backgroundColor = `hsl(${progress}, 100%, 50%)`; // Transition from red to green
+
+            // Move the hat to the end of the progress bar
+            graduationHat.style.left = `${progress}%`;
+
+            // Display the daily encouragement message
+            encouragementElement.innerHTML = getDailyEncouragement();
 
             const days = Math.floor(difference / (1000 * 60 * 60 * 24));
             const hours = Math.floor((difference % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
             const seconds = Math.floor((difference % (1000 * 60)) / 1000);
 
-            document.getElementById("countdown").innerHTML = 
-                `${days} Days, ${hours} Hours, ${minutes} Minutes, ${seconds} Seconds`;
+            daysElement.innerHTML = `${days} يوم`;
+            hoursElement.innerHTML = `${hours} ساعة`;
+            minutesElement.innerHTML = `${minutes} دقيقة`;
+            secondsElement.innerHTML = `${seconds} ثانية`;
+
+            // Change countdown text to green in the last 10 days
+            if (days <= 10) {
+                countdownElement.classList.add("green");
+            } else {
+                countdownElement.classList.remove("green");
+            }
         }
 
-        setInterval(updateCountdown, 1000);
-        updateCountdown();
+        document.addEventListener("DOMContentLoaded", function () {
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+        });
     </script>
 </body>
+
 </html>
